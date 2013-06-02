@@ -1,0 +1,7 @@
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteCond %{REQUEST_URI}  !(\.gif|\.png|\.jpg|\.jpeg|\.tif|\.tiff)$
+RewriteRule . ../index.php [L]
+</IfModule>
