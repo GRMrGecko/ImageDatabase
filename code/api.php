@@ -26,7 +26,7 @@ if (isset($_MGM['user']) && $_MGM['user']['level']==1 && $_MGM['path'][1]=="user
 				$level = "Moderator";
 			if ($result['level']==3)
 				$level = "Tagger";
-			?><tr><td class="id"><?=$result['docid']?></td><td class="email"><?=$result['email']?></td><td class="level" value="<?=$result['level']?>"><?=$level?></td></tr><?
+			?><tr><td class="id"><?=htmlspecialchars($result['docid'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?></td><td class="email"><?=htmlspecialchars($result['email'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?></td><td class="level" value="<?=htmlspecialchars($result['level'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>"><?=$level?></td></tr><?
 		}
 	}
 	if ($_MGM['path'][2]=="update") {
@@ -92,7 +92,7 @@ if (isset($_MGM['user']) && $_MGM['path'][1]=="tagless") {
 	$result = databaseFetchAssoc($results);
 	if ($result!=NULL) {
 		?>
-		<span id="image" hash="<?=$result['hash']?>" user="<?=$result['user_id']?>" extension="<?=$result['extension']?>" tags="<?=$result['tags']?>" image_width="<?=$result['width']?>" image_height="<?=$result['height']?>" file_size="<?=$result['file_size']?>" time="<?=$result['time']?>" original="<?=generateURL("data/".$result['hash'].".".$result['extension'])?>"></span>
+		<span id="image" hash="<?=htmlspecialchars($result['hash'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" user="<?=htmlspecialchars($result['user_id'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" extension="<?=htmlspecialchars($result['extension'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" tags="<?=htmlspecialchars($result['tags'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" image_width="<?=htmlspecialchars($result['width'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" image_height="<?=htmlspecialchars($result['height'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" file_size="<?=htmlspecialchars($result['file_size'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" time="<?=htmlspecialchars($result['time'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" original="<?=generateURL("data/".htmlspecialchars($result['hash'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true).".".htmlspecialchars($result['extension'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true))?>"></span>
 		<?
 	}
 	exit();
@@ -102,7 +102,7 @@ if ($_MGM['path'][1]=="hash") {
 	$result = databaseFetchAssoc($results);
 	if ($result!=NULL) {
 		?>
-		<span id="image" hash="<?=$result['hash']?>" user="<?=$result['user_id']?>" extension="<?=$result['extension']?>" tags="<?=$result['tags']?>" image_width="<?=$result['width']?>" image_height="<?=$result['height']?>" file_size="<?=$result['file_size']?>" time="<?=$result['time']?>" original="<?=generateURL("data/".$result['hash'].".".$result['extension'])?>"></span>
+		<span id="image" hash="<?=htmlspecialchars($result['hash'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" user="<?=htmlspecialchars($result['user_id'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" extension="<?=htmlspecialchars($result['extension'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" tags="<?=htmlspecialchars($result['tags'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" image_width="<?=htmlspecialchars($result['width'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" image_height="<?=htmlspecialchars($result['height'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" file_size="<?=htmlspecialchars($result['file_size'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" time="<?=htmlspecialchars($result['time'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" original="<?=generateURL("data/".htmlspecialchars($result['hash'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true).".".htmlspecialchars($result['extension'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true))?>"></span>
 		<?
 	}
 	exit();
@@ -113,15 +113,30 @@ $offset = $limit*$page;
 
 $filter = (isset($_REQUEST['filter']) ? trim($_REQUEST['filter']) : "");
 $results = NULL;
-if (!empty($filter))
-	$results = databaseQuery("SELECT * FROM images WHERE images MATCH %s LIMIT %d,%d", $filter, $offset, $limit);
-else
+if (!empty($filter)) {
+	$startTime = 0;
+	$endTime = 0;
+	if (preg_match("/(?:[0-9]{4}(?:\s|-)[0-9]{2}(?:\s|-)[0-9]{2}|[0-9]{1,2}\/[0-9]{1,2}\/[0-9]{2,4}|yesterday|today)$/", $filter)) {
+		$startTime = strtotime($filter);
+		$endTime = strtotime($filter." 23:59:59");
+	}
+	if (preg_match("/From:(?:|\s)([a-z0-9\/\s-:]+)\sTo:(?:|\s)([a-z0-9\/\s-:]+)/i", $filter, $matches)) {
+		$startTime = strtotime($matches[1]);
+		$endTime = strtotime($matches[2]);
+	}
+	if ($startTime!=0 && $endTime!=0) {
+		$results = databaseQuery("SELECT * FROM images WHERE time>=%s AND time<=%s ORDER BY time ASC LIMIT %d,%d", $startTime, $endTime, $offset, $limit);
+	} else {
+		$results = databaseQuery("SELECT * FROM images WHERE images MATCH %s LIMIT %d,%d", $filter, $offset, $limit);
+	}
+} else {
 	$results = databaseQuery("SELECT * FROM images ORDER BY time DESC LIMIT %d,%d", $offset, $limit);
+}
 ?><div id="content"><?
 $count = 0;
 while ($result = databaseFetchAssoc($results)) {
 	?>
-	<span class="image" hash="<?=$result['hash']?>" user="<?=$result['user_id']?>" extension="<?=$result['extension']?>" tags="<?=$result['tags']?>" image_width="<?=$result['width']?>" image_height="<?=$result['height']?>" file_size="<?=$result['file_size']?>" time="<?=$result['time']?>" original="<?=generateURL("data/".$result['hash'].".".$result['extension'])?>"><img src="<?=generateURL("thumbs/".$result['hash'].".".$result['extension'])?>" width="<?=$result['thumb_width']?>" height="<?=$result['thumb_height']?>" /></span>
+	<span class="image" hash="<?=htmlspecialchars($result['hash'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" user="<?=htmlspecialchars($result['user_id'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" extension="<?=htmlspecialchars($result['extension'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" tags="<?=htmlspecialchars($result['tags'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" image_width="<?=htmlspecialchars($result['width'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" image_height="<?=htmlspecialchars($result['height'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" file_size="<?=htmlspecialchars($result['file_size'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" time="<?=htmlspecialchars($result['time'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" original="<?=generateURL("data/".htmlspecialchars($result['hash'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true).".".htmlspecialchars($result['extension'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true))?>"><img src="<?=generateURL("thumbs/".htmlspecialchars($result['hash'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true).".".htmlspecialchars($result['extension'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true))?>" width="<?=htmlspecialchars($result['thumb_width'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" height="<?=htmlspecialchars($result['thumb_height'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" /></span>
 	<?
 	$count++;
 }

@@ -76,6 +76,6 @@ if (isset($received['result']['tags'])) {
 You have access to many variables about the file being processed including it's name and extension. Just look at code/upload.php to see what is available.
 
 #Known Problems
-There is going to be issues with people who add tags or other user fields that contains a quotation mark or anything else which could interrupt the HTML code (not an sql injection). I was too lazy and didn't want to look up my code for preventing these sorts of issues. So for now, just use it as a personal database. There isn't a public registration module anyway. Maybe when I get time, I'll fix these possible issues.
-
 There isn't any error reporting in the API and there isn't anyway for the user to know that such an error such as network issues or database issues occured.
+
+There isn't a way for users to to sign up. If I were to implement one... The admin would be able to choose rather to allow signups or not.

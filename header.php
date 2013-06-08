@@ -62,7 +62,7 @@
 					</ul>
 					<?if ($_MGM['path'][0]=="") {?>
 		            <form class="navbar-form pull-right" id="filter_form">
-		              <input class="search-query" type="text" placeholder="Filter" id="filter_field" name="filter" value="<?=$_REQUEST['filter']?>" />
+		              <input class="search-query" type="text" placeholder="Filter" id="filter_field" name="filter" value="<?=htmlspecialchars($_REQUEST['filter'], ENT_COMPAT | ENT_HTML401, 'UTF-8', true)?>" />
 		            </form>
 					<?}?>
 				</div>

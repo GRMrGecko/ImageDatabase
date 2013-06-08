@@ -21,7 +21,6 @@ if ($_MGM['path'][1]=="complete") {
 		echo "Processing ".basename($file)."<br />\n";
 		if (!file_exists($file)) {
 			echo "Error: <span style=\"color: #ff0000;\">File does not exist.</span>";
-			unlink($file);
 			exit();
 		}
 		$allowedExtensions = array("png", "jpg", "jpeg", "gif", "tif", "tiff", "bmp");
@@ -133,7 +132,7 @@ if ($_MGM['path'][1]=="complete") {
 		rename($file, $newFile);
 		echo "Moved Original.<br />\n";
 		
-		databaseQuery("INSERT INTO images (user_id,hash,extension,name,file_size,width,height,thumb_file_size,thumb_width,thumb_height,tags,external_data,ocr,time) VALUES (%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%s,%s,%s,%d)", $_MGM['user']['docid'], $hash, $extension, $filename, $fileSize, $width, $height, filesize($thumbFile), $newWidth, $newHeight, implode(" ", $tags), $external_data, $ocr, $_MGM['time']);
+		databaseQuery("INSERT INTO images (user_id,hash,extension,name,file_size,width,height,thumb_file_size,thumb_width,thumb_height,tags,external_data,ocr,time) VALUES (%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%s,%s,%s,%d)", $_MGM['user']['docid'], $hash, $extension, $filename, $fileSize, $width, $height, filesize($thumbFile), $newWidth, $newHeight, implode(" ", $tags), $external_data, $ocr, filemtime($newFile));
 		echo "Complete.<br />\n";
 		exit();
 	}
