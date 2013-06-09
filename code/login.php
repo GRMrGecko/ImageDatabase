@@ -24,7 +24,7 @@ if (isset($_REQUEST['login'])) {
 		$error = "Invalid login credentials.";
 	} else {
 		$salt = substr($user['password'], 0, 12);
-		$epassword = $salt.hash("sha512", $salt.hash("sha512", $password));
+		$epassword = $salt.hashPassword($password,hex2bin($salt));
 		if ($epassword!=$user['password']) {
 			$error = "Invalid login credentials.";
 		} else {

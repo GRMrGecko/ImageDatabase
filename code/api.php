@@ -42,7 +42,7 @@ if (isset($_MGM['user']) && $_MGM['user']['level']==1 && $_MGM['path'][1]=="user
 			$epassword = $result['password'];
 			if (!empty($password)) {
 				$salt = substr(sha1(rand()),0,12);
-				$epassword = $salt.hash("sha512", $salt.hash("sha512", $password));
+				$epassword = $salt.hashPassword($password,hex2bin($salt));
 			}
 			if ($level=="")
 				$level = $result['level'];

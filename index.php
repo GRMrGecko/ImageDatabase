@@ -17,7 +17,7 @@
 error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING & ~E_STRICT);
 
 $_MGM = array();
-$_MGM['version'] = "1";
+$_MGM['version'] = "2";
 $_MGM['DBType'] = "SQLITE"; // MYSQL, POSTGRESQL, SQLITE.
 $_MGM['DBPersistent'] = NO;
 $_MGM['DBHost'] = "localhost";
@@ -70,6 +70,14 @@ $_MGM['CookieDomain'] = ".".$_MGM['domainname'];
 function generateURL($path) {
 	global $_MGM;
 	return "http".($_MGM['ssl'] ? "s" : "")."://".$_MGM['domain'].(((!$_MGM['ssl'] && $_MGM['port']==80) || ($_MGM['ssl'] && $_MGM['port']==443)) ? "" : ":{$_MGM['port']}").$_MGM['installPath'].$path;
+}
+
+function hashPassword($password, $salt) {
+	$hashed = hash("sha512", $salt.$password);
+	for ($i=0; $i<10000; $i++) {
+		$hashed = hash("sha512", $salt.hex2bin($hashed));
+	}
+	return $hashed;
 }
 
 connectToDatabase();
