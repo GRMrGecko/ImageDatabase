@@ -136,6 +136,7 @@ var filter = "";
 var readyToLoad = false;
 var loadingPage = false;
 var currentPage = 0;
+var currentState = 0;
 
 function loadPage(page) {
 	if (loadingPage) {
@@ -224,7 +225,7 @@ function bytesToSize(bytes) {
 	return (Math.round(size*100)/100)+" "+type;
 }
 
-function loadImage(image, animate) {
+function loadImage(image, animate, urlHistory) {
 	if (animate==0) {
 		$("#backdrop").css("opacity", 0);
 		$("#backdrop").removeClass("hide");
@@ -247,14 +248,16 @@ function loadImage(image, animate) {
 	$("#imageViewer_sidebar .basic_info").append("File Size: "+bytesToSize(image.attr("file_size"))+"<br />");
 	
 	$("#imageViewer_sidebar .tags").html("");
-	<?if (isset($_MGM['user'])) {?>
-		$("#imageViewer_sidebar .tags_edit").val(image.attr("tags"));
-	<?}?>
+	var tagsEdit = "";
 	var tags = image.attr("tags").split(" ");
 	for (var i=0; i<tags.length; i++) {
 		var tag = tags[i].replace(/_/g, " ");
 		$("#imageViewer_sidebar .tags").append(tag+"<br />");
+		tagsEdit += tag+"\n";
 	}
+	<?if (isset($_MGM['user'])) {?>
+		$("#imageViewer_sidebar .tags_edit").val(tagsEdit);
+	<?}?>
 	
 	<?if (isset($_MGM['user']) && $_MGM['user']['level']>=4) {?>
 		if (image.attr("user")=="<?=$_MGM['user']['docid']?>") {
@@ -274,6 +277,10 @@ function loadImage(image, animate) {
 	} else {
 		$("#imageViewer_nextButton").attr("disabled","disabled");
 	}
+	if (urlHistory==undefined) {
+		window.history.pushState({image: imageViewing, state: currentState}, "<?=$_MGM['title']?>", "<?=$_MGM['installPath']?>hash/"+image.attr("hash")+"/");
+	}
+	currentState = 2;
 }
 
 $(document).ready(function() {
@@ -286,7 +293,7 @@ $(document).ready(function() {
 	$("#imageViewer_nextButton").click(function() {
 		repositionImage(3);
 	});
-	function closeImageViewer() {
+	function closeImageViewer(urlHistory) {
 		$("#backdrop").animate({opacity: 0}, {duration: 400, complete: function() {
 			$("#backdrop").addClass("hide");
 		}});
@@ -302,6 +309,15 @@ $(document).ready(function() {
 		<?}?>
 		
 		repositionImage(2);
+		
+		if (urlHistory==undefined) {
+			if (filter!="") {
+				window.history.pushState({state: currentState}, "<?=$_MGM['title']?>", "<?=$_MGM['installPath']?>?filter="+encodeURIComponent(filter));
+			} else {
+				window.history.pushState({state: currentState}, "<?=$_MGM['title']?>", "<?=$_MGM['installPath']?>");
+			}
+		}
+		currentState = 2;
 	}
 	$("#backdrop, #imageViewer_close").click(closeImageViewer);
 	$(window).resize(function() {
@@ -320,15 +336,28 @@ $(document).ready(function() {
 				$(this).text("Edit Tags");
 				$("#imageViewer_sidebar .tags").removeClass("hide");
 				$("#imageViewer_sidebar .tags_edit").addClass("hide");
-			
+				
+				var tagsToSave = "";
+				var tags = $("#imageViewer_sidebar .tags_edit").val().split("\n");
+				for (var i=0; i<tags.length; i++) {
+					var tag = tags[i].replace(/\s/g, "_");
+					if (tag=="") {
+						continue;
+					}
+					if (tagsToSave!="") {
+						tagsToSave += " ";
+					}
+					tagsToSave += tag;
+				}
+				
 				$("#imageViewer_sidebar .tags").html("");
-				var tags = $("#imageViewer_sidebar .tags_edit").val().split(" ");
+				var tags = tagsToSave.split(" ");
 				for (var i=0; i<tags.length; i++) {
 					var tag = tags[i].replace(/_/g, " ");
 					$("#imageViewer_sidebar .tags").append(tag+"<br />");
 				}
 				
-				$("#imageViewer_apiloader").load("<?=generateURL("api/save_tags")?>/", {hash: imageViewing, tags: $("#imageViewer_sidebar .tags_edit").val()});
+				$("#imageViewer_apiloader").load("<?=generateURL("api/save_tags")?>/", {hash: imageViewing, tags: tagsToSave});
 			}
 		});
 		<?if ($_MGM['user']['level']<=2) {?>
@@ -356,9 +385,52 @@ $(document).ready(function() {
 		}
 	});
 	
+	window.onpopstate = function(event) {
+		if (event.state!=undefined) {
+			if (event.state.filter!=undefined) {
+				if (currentState!=2) {
+					filter = event.state.filter;
+					$("#filter_field").val(filter);
+					$("#images_main").html("");
+					loadPage(0);
+				} else {
+					closeImageViewer(true);
+				}
+				currentState = event.state.state;
+			} else if (event.state.image!=undefined) {
+				var image = $("#images_main .image[hash='"+event.state.image+"']");
+				if (image.length>0) {
+					if ($("#backdrop").hasClass("hide")) {
+						loadImage(image, 0, true);
+					} else {
+						loadImage(image, 1, true);
+					}
+				} else {
+					closeImageViewer(true);
+				}
+			}
+		} else {
+			if (currentState==2) {
+				closeImageViewer(true);
+			} else {
+				filter = "";
+				$("#filter_field").val(filter);
+				$("#images_main").html("");
+				loadPage(0);
+			}
+			currentState = 0;
+		}
+	};
+	
 	$("#filter_form").submit(function() {
 		filter = $("#filter_field").val();
 		$("#images_main").html("");
+		if (filter=="") {
+			window.history.pushState({filter: filter, state: currentState}, "<?=$_MGM['title']?>", "<?=$_MGM['installPath']?>");
+		} else {
+			window.history.pushState({filter: filter, state: currentState}, "<?=$_MGM['title']?>", "<?=$_MGM['installPath']?>?filter="+encodeURIComponent(filter));
+		}
+		currentState = 1;
 		loadPage(0);
 		return false;
 	});

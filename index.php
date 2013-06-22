@@ -18,6 +18,7 @@ error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING & ~E_STRICT);
 
 $_MGM = array();
 $_MGM['version'] = "2";
+$_MGM['title'] = "Image Database";
 $_MGM['DBType'] = "SQLITE"; // MYSQL, POSTGRESQL, SQLITE.
 $_MGM['DBPersistent'] = NO;
 $_MGM['DBHost'] = "localhost";

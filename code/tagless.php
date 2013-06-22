@@ -60,10 +60,29 @@ require_once("header.php");
 </style>
 <div id="image_loader" style="display: none;"></div>
 
+<?if (isset($_MGM['user']) && $_MGM['user']['level']<=2) {?>
+	<div id="imageViewer_confirmDelete" class="modal hide fade" tabindex="-1" role="dialog">
+		<div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+			<h3>Delete Image</h3>
+		</div>
+		<div class="modal-body">
+			<p>You are about to delete an image from the database.</p>
+			<p>Are you sure you wish to do this?</p>
+		</div>
+		<div class="modal-footer">
+			<button class="btn" data-dismiss="modal" aria-hidden="true">No</button>
+			<button class="btn btn-danger" data-dismiss="modal" id="imageViewer_confirmDelete_yes">Yes</button>
+		</div>
+	</div>
+<?}?>
 <div id="imageViewer_sidebar">
 	<?if (isset($_MGM['user'])) {?>
 		<textarea class="tags_edit"></textarea>
 		<button type="button" class="btn" id="imageViewer_save">Save/Next</button>
+		<?if ($_MGM['user']['level']<=2) {?>
+			<br /><br /><button type="button" class="btn btn-danger" id="imageViewer_delete">Delete/Next</button>
+		<?}?>
 		<div id="imageViewer_apiloader" style="display: none;"></div>
 	<?}?>
 </div>
@@ -113,8 +132,17 @@ function loadImage(image) {
 	$("#imageViewer_main").html("<a href=\""+image.attr("original")+"\" target=\"blank\"><img src=\""+image.attr("original")+"\" /></a>");
 	repositionImage();
 	
+	var tagsEdit = "";
+	var tags = image.attr("tags").split(" ");
+	for (var i=0; i<tags.length; i++) {
+		var tag = tags[i].replace(/_/g, " ");
+		tagsEdit += tag+"\n";
+	}
 	<?if (isset($_MGM['user'])) {?>
-		$("#imageViewer_sidebar .tags_edit").val(image.attr("tags"));
+		$("#imageViewer_sidebar .tags_edit").val(tagsEdit);
+	<?}?>
+
+	<?if (isset($_MGM['user'])) {?>
 		$("#imageViewer_sidebar .tags_edit").focus();
 	<?}?>
 }
@@ -130,10 +158,36 @@ $(document).ready(function() {
 			if (imageViewing=="") {
 				return;
 			}
-			$("#imageViewer_apiloader").load("<?=generateURL("api/save_tags")?>/", {hash: imageViewing, tags: $("#imageViewer_sidebar .tags_edit").val()}, function() {
+			var tagsToSave = "";
+			var tags = $("#imageViewer_sidebar .tags_edit").val().split("\n");
+			for (var i=0; i<tags.length; i++) {
+				var tag = tags[i].replace(/\s/g, "_");
+				if (tag=="") {
+					continue;
+				}
+				if (tagsToSave!="") {
+					tagsToSave += " ";
+				}
+				tagsToSave += tag;
+			}
+			$("#imageViewer_apiloader").load("<?=generateURL("api/save_tags")?>/", {hash: imageViewing, tags: tagsToSave}, function() {
 				loadNext();
 			});
 		});
+		
+		<?if ($_MGM['user']['level']<=2) {?>
+			$("#imageViewer_delete").click(function() {
+				if (imageViewing=="") {
+					return;
+				}
+				$("#imageViewer_confirmDelete").modal();
+			});
+			$("#imageViewer_confirmDelete_yes").click(function() {
+				$("#imageViewer_apiloader").load("<?=generateURL("api/delete")?>/", {hash: imageViewing}, function() {
+					loadNext();
+				});
+			});
+		<?}?>
 	<?}?>
 	loadNext();
 });

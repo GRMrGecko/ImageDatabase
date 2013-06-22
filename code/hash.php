@@ -151,14 +151,16 @@ function loadImage(image) {
 	$("#imageViewer_sidebar .basic_info").append("File Size: "+bytesToSize(image.attr("file_size"))+"<br />");
 
 	$("#imageViewer_sidebar .tags").html("");
-	<?if (isset($_MGM['user'])) {?>
-		$("#imageViewer_sidebar .tags_edit").val(image.attr("tags"));
-	<?}?>
+	var tagsEdit = "";
 	var tags = image.attr("tags").split(" ");
 	for (var i=0; i<tags.length; i++) {
 		var tag = tags[i].replace(/_/g, " ");
 		$("#imageViewer_sidebar .tags").append(tag+"<br />");
+		tagsEdit += tag+"\n";
 	}
+	<?if (isset($_MGM['user'])) {?>
+		$("#imageViewer_sidebar .tags_edit").val(tagsEdit);
+	<?}?>
 	
 	<?if (isset($_MGM['user']) && $_MGM['user']['level']>=4) {?>
 		if (image.attr("user")=="<?=$_MGM['user']['docid']?>") {
@@ -189,14 +191,27 @@ $(document).ready(function() {
 				$("#imageViewer_sidebar .tags").removeClass("hide");
 				$("#imageViewer_sidebar .tags_edit").addClass("hide");
 		
+				var tagsToSave = "";
+				var tags = $("#imageViewer_sidebar .tags_edit").val().split("\n");
+				for (var i=0; i<tags.length; i++) {
+					var tag = tags[i].replace(/\s/g, "_");
+					if (tag=="") {
+						continue;
+					}
+					if (tagsToSave!="") {
+						tagsToSave += " ";
+					}
+					tagsToSave += tag;
+				}
+				
 				$("#imageViewer_sidebar .tags").html("");
-				var tags = $("#imageViewer_sidebar .tags_edit").val().split(" ");
+				var tags = tagsToSave.split(" ");
 				for (var i=0; i<tags.length; i++) {
 					var tag = tags[i].replace(/_/g, " ");
 					$("#imageViewer_sidebar .tags").append(tag+"<br />");
 				}
-			
-				$("#imageViewer_apiloader").load("<?=generateURL("api/save_tags")?>/", {hash: imageViewing, tags: $("#imageViewer_sidebar .tags_edit").val()});
+				
+				$("#imageViewer_apiloader").load("<?=generateURL("api/save_tags")?>/", {hash: imageViewing, tags: tagsToSave});
 			}
 		});
 	<?}?>
