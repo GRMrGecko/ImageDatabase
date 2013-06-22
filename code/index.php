@@ -284,8 +284,20 @@ function loadImage(image, animate, urlHistory) {
 }
 
 $(document).ready(function() {
+	function escapeListen(listen) {
+		if (listen==false) {
+			$(document).off("keyup.dismiss.modal");
+		} else {
+			$(document).on("keyup.dismiss.modal", function(event) {
+				if (event.which==27) {
+					closeImageViewer();
+				}
+			});
+		}
+	}
 	$("#images_main").on("click", ".image", function() {
 		loadImage($(this), 0);
+		escapeListen(true);
 	});
 	$("#imageViewer_previousButton").click(function() {
 		repositionImage(4);
@@ -318,6 +330,7 @@ $(document).ready(function() {
 			}
 		}
 		currentState = 2;
+		escapeListen(false);
 	}
 	$("#backdrop, #imageViewer_close").click(closeImageViewer);
 	$(window).resize(function() {
@@ -366,12 +379,18 @@ $(document).ready(function() {
 					return;
 				}
 				$("#imageViewer_confirmDelete").modal();
+				escapeListen(false);
 			});
 			$("#imageViewer_confirmDelete_yes").click(function() {
 				$("#imageViewer_apiloader").load("<?=generateURL("api/delete")?>/", {hash: imageViewing});
 				closeImageViewer();
 				$("#images_main .image[hash='"+imageViewing+"']").remove();
 			});
+			$("#imageViewer_confirmDelete").on('hidden', function() {
+				if (!$("#backdrop").hasClass("hide")) {
+					escapeListen(true);
+				}
+			})
 		<?}?>
 	<?}?>
 	
@@ -402,6 +421,7 @@ $(document).ready(function() {
 				if (image.length>0) {
 					if ($("#backdrop").hasClass("hide")) {
 						loadImage(image, 0, true);
+						escapeListen(true);
 					} else {
 						loadImage(image, 1, true);
 					}
