@@ -322,7 +322,7 @@ $(document).ready(function() {
 		
 		repositionImage(2);
 		
-		if (urlHistory==undefined) {
+		if (urlHistory!=true) {
 			if (filter!="") {
 				window.history.pushState({state: currentState}, "<?=$_MGM['title']?>", "<?=$_MGM['installPath']?>?filter="+encodeURIComponent(filter));
 			} else {

@@ -13,6 +13,8 @@
 //  DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS
 //  ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
+
+databaseQuery("UPDATE users SET time=%d WHERE docid=%s", $_MGM['time'], $_MGM['user']['docid']);
 setcookie("{$_MGM['CookiePrefix']}user_email", "", $_MGM['time'], $_MGM['CookiePath'], $_MGM['CookieDomain']);
 setcookie("{$_MGM['CookiePrefix']}user_password", "", $_MGM['time'], $_MGM['CookiePath'], $_MGM['CookieDomain']);
 header("location: ".generateURL());

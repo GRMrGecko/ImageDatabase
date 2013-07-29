@@ -88,18 +88,18 @@ if ($_MGM['path'][1]=="complete") {
 					$ocr .= $line;
 				}
 			}	
-			echo "OCR: ".$ocr."<br />\n";
+			echo "OCR: ".htmlspecialchars($ocr, ENT_COMPAT | ENT_HTML401, 'UTF-8', true)."<br />\n";
 		}
 		
 		$tags = array();
 		$external_data = "";
 		
 		$plugins = glob("./external_data_plugins/*.php");
-		for ($i=0; $i<count($plugins); $i++) {
-			require($plugins[$i]);
+		for ($pluginIndex=0; $pluginIndex<count($plugins); $pluginIndex++) {
+			require($plugins[$pluginIndex]);
 		}
 		
-		echo "External Data: ".$external_data."<br />\n";
+		echo "External Data: ".htmlspecialchars($external_data, ENT_COMPAT | ENT_HTML401, 'UTF-8', true)."<br />\n";
 		
 		$thumbFile = "./thumbs/".$hash.".".$extension;
 		$target = 150;
@@ -142,16 +142,19 @@ if ($_MGM['path'][1]=="complete") {
 	Processing...<br />
 	<div id="result"></div>
 	<script type="text/javascript">
-	var files = new Array(<?
+	var files = new Array(
+		<?
 		$array = "";
 		for ($i=0; $i<count($files); $i++) {
 			//if (in_array(pathinfo($files[$i], PATHINFO_EXTENSION), $allowedExtensions)) {
 			if ($array!="")
-				$array .= ",";
+				$array .= ",\n\t\t";
 			$array .= "\"".str_replace("\"", "\\\"", $files[$i])."\"";
 		}
 		echo $array;
-	?>);
+	?>
+
+	);
 	var i=0;
 	function processFiles() {
 		if (i<files.length) {

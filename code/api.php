@@ -55,7 +55,7 @@ if (isset($_MGM['user']) && $_MGM['user']['level']==1 && $_MGM['path'][1]=="user
 		$level = (isset($_REQUEST['level']) ? trim($_REQUEST['level']) : "");
 		if (!empty($email) && !empty($level)) {
 			$salt = substr(sha1(rand()),0,12);
-			$epassword = $salt.hash("sha512", $salt.hash("sha512", $password));
+			$epassword = $salt.hashPassword($password,hex2bin($salt));
 			databaseQuery("INSERT INTO users (email, password, time, level) VALUES (%s,%s,%d,%s)", $email, $epassword, $_MGM['time'], $level);
 		}
 	}

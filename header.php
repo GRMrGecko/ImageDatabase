@@ -25,7 +25,7 @@
 	
 	<link href="<?=$_MGM['installPath']?>css/bootstrap.min.css" rel="stylesheet">
 	<style>
-      body {
+	body {
 		padding-top: 60px;
 	}
 	</style>

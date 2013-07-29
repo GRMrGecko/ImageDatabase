@@ -72,7 +72,7 @@ require_once("header.php");
 </table>
 <script type="text/javascript">
 function loadUsers() {
-	$("#users_list tbody").load("<?=generateURL("api/users/list")?>/")
+	$("#users_list tbody").load("<?=generateURL("api/users/list")?>/");
 }
 $(document).ready(function() {
 	$("#users_list").on("click", "tbody tr", function() {
